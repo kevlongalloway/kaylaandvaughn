@@ -2,7 +2,6 @@
 
 const express  = require('express');
 const session  = require('express-session');
-const bcrypt   = require('bcrypt');
 const { Pool } = require('pg');
 const path     = require('path');
 const fs       = require('fs');
@@ -124,7 +123,7 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', (req, res) => {
   const ip       = req.ip;
   const password = String(req.body.password || '');
 
@@ -132,23 +131,14 @@ app.post('/api/login', async (req, res) => {
     return res.redirect('/login?error=locked');
   }
 
-  try {
-    const result = await db.query('SELECT password_hash FROM admin_credentials WHERE id = 1');
-    if (result.rows.length === 0) {
-      return res.redirect('/login?error=1');
-    }
-    const match = await bcrypt.compare(password, result.rows[0].password_hash);
-    if (!match) {
-      recordLoginFailure(ip);
-      return res.redirect('/login?error=1');
-    }
-    clearLoginFailures(ip);
-    req.session.authenticated = true;
-    req.session.save(() => res.redirect('/dashboard'));
-  } catch (err) {
-    console.error('Login error:', err);
+  if (password !== process.env.DASHBOARD_PASSWORD) {
+    recordLoginFailure(ip);
     return res.redirect('/login?error=1');
   }
+
+  clearLoginFailures(ip);
+  req.session.authenticated = true;
+  req.session.save(() => res.redirect('/dashboard'));
 });
 
 app.post('/api/logout', (req, res) => {
@@ -216,16 +206,6 @@ async function start() {
   const schema = fs.readFileSync(path.join(__dirname, 'db', 'schema.sql'), 'utf8');
   await db.query(schema);
   console.log('Database schema ready.');
-
-  // Sync dashboard password from env on every boot
-  if (process.env.DASHBOARD_PASSWORD) {
-    const hash = await bcrypt.hash(process.env.DASHBOARD_PASSWORD, 12);
-    await db.query(
-      'INSERT INTO admin_credentials (id, password_hash) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash',
-      [hash]
-    );
-    console.log('Dashboard credentials initialised.');
-  }
 
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`Server running on port ${port}`));
