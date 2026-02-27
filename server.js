@@ -217,17 +217,14 @@ async function start() {
   await db.query(schema);
   console.log('Database schema ready.');
 
-  // Seed dashboard password on first boot
+  // Sync dashboard password from env on every boot
   if (process.env.DASHBOARD_PASSWORD) {
-    const existing = await db.query('SELECT id FROM admin_credentials WHERE id = 1');
-    if (existing.rows.length === 0) {
-      const hash = await bcrypt.hash(process.env.DASHBOARD_PASSWORD, 12);
-      await db.query(
-        'INSERT INTO admin_credentials (id, password_hash) VALUES (1, $1) ON CONFLICT (id) DO NOTHING',
-        [hash]
-      );
-      console.log('Dashboard credentials initialised.');
-    }
+    const hash = await bcrypt.hash(process.env.DASHBOARD_PASSWORD, 12);
+    await db.query(
+      'INSERT INTO admin_credentials (id, password_hash) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash',
+      [hash]
+    );
+    console.log('Dashboard credentials initialised.');
   }
 
   const port = process.env.PORT || 3000;
