@@ -1,0 +1,69 @@
+# Cloud Build CI/CD pipeline — builds, pushes, and deploys to Cloud Run.
+#
+# Required substitution (set in your Cloud Build trigger):
+#   _CLOUD_SQL_INSTANCE   e.g. my-project:us-central1:wedding-db
+#
+# Optional substitutions (override in trigger if needed):
+#   _REGION   us-central1
+#   _REPO     wedding-app
+#   _SERVICE  kaylaandvaughn
+
+substitutions:
+  _REGION: us-central1
+  _REPO: wedding-app
+  _SERVICE: kaylaandvaughn
+  _CLOUD_SQL_INSTANCE: ''   # must be set in the trigger (PROJECT:REGION:INSTANCE)
+
+steps:
+  # Pull the latest image for layer caching (OK to fail on first build)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: pull-cache
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        docker pull ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest || true
+
+  # Build tagged with :latest (cache) and :$COMMIT_SHA (immutable deploy pin)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build
+    args:
+      - build
+      - '--cache-from'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
+      - '.'
+
+  # Push both tags
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push
+    args:
+      - push
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}'
+
+  # Deploy the commit-pinned image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: deploy
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - '$_SERVICE'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--add-cloudsql-instances=$_CLOUD_SQL_INSTANCE'
+      - '--set-env-vars=NODE_ENV=production'
+      - '--set-secrets=SESSION_SECRET=session-secret:latest,DASHBOARD_PASSWORD=dashboard-password:latest,DATABASE_URL=database-url:latest'
+      - '--memory=256Mi'
+      - '--min-instances=0'
+      - '--max-instances=1'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'

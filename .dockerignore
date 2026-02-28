@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+.git/
+npm-debug.log*
+*.log
+render.yaml
+gcp-deploy.md
