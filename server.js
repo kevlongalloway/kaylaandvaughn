@@ -9,9 +9,12 @@ const fs       = require('fs');
 
 // ─── Database ────────────────────────────────────────────────────────────────
 
+// Cloud SQL (GCP) uses a unix socket — SSL not needed for socket connections.
+// For other hosted Postgres (e.g. Render, Heroku), keep rejectUnauthorized:false.
+const isSocketUrl = (process.env.DATABASE_URL || '').includes('/cloudsql/');
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.NODE_ENV === 'production' && !isSocketUrl ? { rejectUnauthorized: false } : false,
 });
 
 // ─── Rate limiting helpers (in-memory, no extra dependency) ──────────────────

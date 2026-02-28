@@ -1,0 +1,39 @@
+# Cloud Build — auto-deploy to Cloud Run on every git push
+# Connect your repo at: https://console.cloud.google.com/cloud-build/triggers
+
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/kaylaandvaughn:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/kaylaandvaughn:latest'
+      - '.'
+
+  # Push to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', 'gcr.io/$PROJECT_ID/kaylaandvaughn']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - kaylaandvaughn
+      - '--image=gcr.io/$PROJECT_ID/kaylaandvaughn:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--add-cloudsql-instances=$PROJECT_ID:$_REGION:$_DB_INSTANCE'
+      - '--update-secrets=DATABASE_URL=DATABASE_URL:latest,SESSION_SECRET=SESSION_SECRET:latest,DASHBOARD_PASSWORD=DASHBOARD_PASSWORD:latest'
+      - '--set-env-vars=NODE_ENV=production'
+      - '--allow-unauthenticated'
+
+substitutions:
+  _REGION: us-central1
+  _DB_INSTANCE: kaylaandvaughn-db
+
+options:
+  logging: CLOUD_LOGGING_ONLY
