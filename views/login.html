@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Kayla &amp; Vaughn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Lora:ital,wght@0,300;0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ivory:    #FDFAF2;
+  --ivory2:   #F5F0E4;
+  --pist:     #B8CCA4;
+  --pist-lt:  #EBF2E5;
+  --pist-dk:  #6E9160;
+  --gold:     #C9A84C;
+  --gold-lt:  #E8D5A3;
+  --beige:    #EDE4D0;
+  --beige-dk: #C8B99A;
+  --deep:     #2E2618;
+  --text:     #3E3222;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: "Lora", serif;
+  background: var(--ivory);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-wrap {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid rgba(201,168,76,0.28);
+  padding: 52px 44px 48px;
+  text-align: center;
+}
+
+/* Ornament (matches site's gold line + diamond) */
+.orn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.orn-line { flex: 1; height: 1px; background: var(--gold-lt); max-width: 60px; }
+.orn-diamond {
+  width: 7px; height: 7px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+
+.login-mono {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2rem;
+  color: var(--gold);
+  letter-spacing: 4px;
+  margin-bottom: 28px;
+}
+
+.sec-lbl {
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.9rem;
+  font-weight: 400;
+  color: var(--deep);
+  margin-bottom: 4px;
+}
+
+.gold-bar {
+  width: 40px;
+  height: 2px;
+  background: var(--gold);
+  margin: 18px auto 28px;
+}
+
+.error-msg {
+  background: #fff5f5;
+  border: 1px solid rgba(192,57,43,0.25);
+  color: #c0392b;
+  font-size: 0.82rem;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+
+.locked-msg {
+  background: #fff8f0;
+  border: 1px solid rgba(201,168,76,0.35);
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+
+.fg { display: flex; flex-direction: column; gap: 6px; text-align: left; margin-bottom: 16px; }
+.fg label { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; }
+.fg input {
+  padding: 12px 14px;
+  border: 1px solid rgba(62,50,34,0.18);
+  background: var(--ivory);
+  font-family: "Lora", serif;
+  font-size: 0.9rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.fg input:focus { border-color: var(--pist-dk); }
+
+.btn-login {
+  width: 100%;
+  padding: 14px 44px;
+  background: var(--deep);
+  color: var(--ivory);
+  border: none;
+  font-family: "Lora", serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.3s;
+}
+.btn-login:hover { background: var(--pist-dk); }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-mono">K &amp; V</div>
+
+  <div class="orn">
+    <div class="orn-line"></div>
+    <div class="orn-diamond"></div>
+    <div class="orn-line"></div>
+  </div>
+
+  <p class="sec-lbl">Wedding Planner Access</p>
+  <h1>Dashboard</h1>
+  <div class="gold-bar"></div>
+
+  <div class="error-msg"  id="err-wrong"  style="display:none">Incorrect password. Please try again.</div>
+  <div class="locked-msg" id="err-locked" style="display:none">Too many failed attempts. Please wait 15 minutes.</div>
+
+  <form method="POST" action="/api/login">
+    <div class="fg">
+      <label>Password</label>
+      <input type="password" name="password" required autofocus autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn-login">Enter Dashboard</button>
+  </form>
+</div>
+
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('error') === '1')      document.getElementById('err-wrong').style.display  = 'block';
+  if (params.get('error') === 'locked') document.getElementById('err-locked').style.display = 'block';
+})();
+</script>
+</body>
+</html>

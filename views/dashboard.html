@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RSVP Dashboard — Kayla &amp; Vaughn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Lora:ital,wght@0,300;0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ivory:    #FDFAF2;
+  --ivory2:   #F5F0E4;
+  --pist:     #B8CCA4;
+  --pist-lt:  #EBF2E5;
+  --pist-dk:  #6E9160;
+  --gold:     #C9A84C;
+  --gold-lt:  #E8D5A3;
+  --beige:    #EDE4D0;
+  --beige-dk: #C8B99A;
+  --deep:     #2E2618;
+  --text:     #3E3222;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: "Lora", serif; background: var(--ivory); color: var(--text); overflow-x: hidden; }
+
+/* ── Nav (matches index.html nav exactly) ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 60px;
+  background: rgba(253,250,242,0.96);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+}
+.nav-mono { font-family: "Cormorant Garamond", serif; font-size: 1.5rem; color: var(--gold); letter-spacing: 3px; }
+.nav-right { display: flex; align-items: center; gap: 24px; }
+.nav-badge {
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 4px 12px; border: 1px solid rgba(201,168,76,0.35);
+  color: var(--pist-dk);
+}
+.btn-logout {
+  font-family: "Lora", serif; font-size: 0.63rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--text); background: transparent;
+  border: 1px solid rgba(62,50,34,0.22); padding: 8px 20px; cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+.btn-logout:hover { background: var(--deep); color: var(--ivory); border-color: var(--deep); }
+
+/* ── Main layout ── */
+main { padding-top: 100px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 48px 60px 80px; }
+
+/* ── Ornament ── */
+.orn {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+}
+.orn-line { width: 56px; height: 1px; background: var(--gold-lt); }
+.orn-diamond { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+
+.sec-lbl {
+  font-size: 0.6rem; letter-spacing: 0.28em; text-transform: uppercase; opacity: 0.5; margin-bottom: 10px;
+}
+.sec-title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 400; color: var(--deep); margin-bottom: 4px;
+}
+.sec-title em { font-style: italic; }
+.gold-bar { width: 40px; height: 2px; background: var(--gold); margin: 18px 0 40px; }
+
+/* ── Stats grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.stat-card {
+  background: #fff;
+  border: 1px solid rgba(201,168,76,0.22);
+  padding: 28px 24px;
+}
+.stat-num {
+  font-family: "Playfair Display", serif;
+  font-size: 2.6rem;
+  font-weight: 400;
+  color: var(--deep);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.stat-lbl {
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pist-dk);
+  opacity: 0.8;
+}
+
+/* ── Action bar ── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.action-bar-right { display: flex; gap: 10px; flex-wrap: wrap; }
+.last-updated { font-size: 0.72rem; opacity: 0.45; font-style: italic; }
+
+.btn-export {
+  display: inline-block;
+  padding: 12px 28px;
+  background: var(--pist-dk);
+  color: #fff;
+  border: none;
+  font-family: "Lora", serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.25s;
+}
+.btn-export:hover { background: var(--deep); }
+
+.btn-refresh {
+  padding: 12px 24px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(62,50,34,0.22);
+  font-family: "Lora", serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+.btn-refresh:hover { background: var(--ivory2); }
+
+/* ── Table ── */
+.table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid rgba(201,168,76,0.2);
+  margin-bottom: 48px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+thead th {
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pist-dk);
+  padding: 14px 18px;
+  border-bottom: 2px solid var(--gold-lt);
+  background: var(--ivory2);
+  text-align: left;
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid rgba(201,168,76,0.1); transition: background 0.15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--pist-lt); }
+tbody td { padding: 14px 18px; color: var(--text); vertical-align: top; }
+.td-num { color: var(--beige-dk); font-size: 0.75rem; }
+.td-song { max-width: 220px; font-style: italic; font-size: 0.84rem; opacity: 0.75; }
+.td-date { font-size: 0.78rem; white-space: nowrap; opacity: 0.65; }
+.td-email { font-size: 0.84rem; }
+.empty-row td { text-align: center; padding: 56px 18px; font-style: italic; opacity: 0.45; }
+
+/* ── Google Sheets panel ── */
+.sheets-panel {
+  background: #fff;
+  border: 1px solid rgba(201,168,76,0.2);
+  padding: 36px 40px;
+}
+.sheets-panel h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--deep);
+  margin-bottom: 6px;
+}
+.gold-bar-left { width: 40px; height: 2px; background: var(--gold); margin: 16px 0 24px; }
+.sheets-panel ol {
+  font-size: 0.9rem;
+  line-height: 2.2;
+  padding-left: 1.3em;
+  color: var(--text);
+  opacity: 0.8;
+}
+.sheets-panel ol li { margin-bottom: 2px; }
+.sheets-tip {
+  margin-top: 24px;
+  padding: 16px 20px;
+  background: var(--pist-lt);
+  font-size: 0.82rem;
+  line-height: 1.9;
+  color: var(--pist-dk);
+  border-left: 3px solid var(--pist);
+}
+.sheets-tip code {
+  font-family: monospace;
+  font-size: 0.85em;
+  background: rgba(110,145,96,0.12);
+  padding: 1px 5px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  .container { padding: 36px 24px 60px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .sheets-panel { padding: 28px 24px; }
+}
+@media (max-width: 560px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .nav-badge { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-mono">K &amp; V</div>
+  <div class="nav-right">
+    <span class="nav-badge" id="nav-badge">Loading…</span>
+    <form method="POST" action="/api/logout" style="margin:0">
+      <button type="submit" class="btn-logout">Sign Out</button>
+    </form>
+  </div>
+</nav>
+
+<main>
+<div class="container">
+
+  <!-- Section header -->
+  <div class="orn">
+    <div class="orn-line"></div>
+    <div class="orn-diamond"></div>
+    <div class="orn-line"></div>
+  </div>
+  <p class="sec-lbl">Guest Management</p>
+  <h1 class="sec-title">RSVP <em>Responses</em></h1>
+  <div class="gold-bar"></div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total RSVPs</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-week">—</div><div class="stat-lbl">This Week</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-latest">—</div><div class="stat-lbl">Latest RSVP</div></div>
+  </div>
+
+  <!-- Action bar -->
+  <div class="action-bar">
+    <span class="last-updated" id="last-updated"></span>
+    <div class="action-bar-right">
+      <button class="btn-refresh" onclick="loadData()">Refresh</button>
+      <a href="/api/rsvps/export.csv" class="btn-export">Export CSV</a>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Song Request</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody id="rsvp-body">
+        <tr class="empty-row"><td colspan="6">Loading responses…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Google Sheets panel -->
+  <div class="sheets-panel">
+    <div class="orn" style="margin-bottom:14px">
+      <div class="orn-line"></div>
+      <div class="orn-diamond"></div>
+      <div class="orn-line"></div>
+    </div>
+    <p class="sec-lbl">Google Sheets Integration</p>
+    <h3>Import RSVPs into Google Sheets</h3>
+    <div class="gold-bar-left"></div>
+    <ol>
+      <li>Click <strong>Export CSV</strong> above to download the latest RSVP data</li>
+      <li>Open <strong>Google Sheets</strong> and create a new spreadsheet (or open an existing one)</li>
+      <li>Go to <strong>File &rarr; Import</strong> and choose <em>Upload</em></li>
+      <li>Select the downloaded CSV file and click <strong>Import data</strong></li>
+      <li>Choose <em>&ldquo;Replace spreadsheet&rdquo;</em> or <em>&ldquo;Insert new sheet&rdquo;</em> as preferred</li>
+      <li>Your RSVPs will populate immediately — repeat anytime for the latest data</li>
+    </ol>
+    <div class="sheets-tip">
+      <strong>Tip:</strong> Use Google Sheets&rsquo; built-in <code>COUNTIF</code> to tally responses.<br>
+      Example: <code>=COUNTA(B2:B)</code> counts all guests, <code>=COUNTIF(D2:D,"*")</code> counts those with emails.
+    </div>
+  </div>
+
+</div>
+</main>
+
+<script>
+async function loadData() {
+  try {
+    var res  = await fetch('/api/rsvps');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    var data = await res.json();
+
+    // Stats
+    document.getElementById('s-total').textContent  = data.total;
+    document.getElementById('s-week').textContent   = data.thisWeek;
+    document.getElementById('nav-badge').textContent = data.total + ' RSVP' + (data.total !== 1 ? 's' : '');
+
+    if (data.latest) {
+      var d = new Date(data.latest);
+      document.getElementById('s-latest').textContent =
+        d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else {
+      document.getElementById('s-latest').textContent = '—';
+    }
+
+    // Last updated
+    document.getElementById('last-updated').textContent =
+      'Last updated: ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    // Table
+    var tbody = document.getElementById('rsvp-body');
+    if (!data.rsvps || data.rsvps.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No RSVPs yet — check back soon!</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.rsvps.map(function(r, i) {
+      var date = new Date(r.submitted_at);
+      var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      var timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      return [
+        '<tr>',
+        '<td class="td-num">' + (i + 1) + '</td>',
+        '<td>' + esc(r.first_name) + '</td>',
+        '<td>' + esc(r.last_name)  + '</td>',
+        '<td class="td-email">' + (r.email ? esc(r.email) : '<span style="opacity:0.35">—</span>') + '</td>',
+        '<td class="td-song">'  + (r.song_request ? esc(r.song_request) : '<span style="opacity:0.35">—</span>') + '</td>',
+        '<td class="td-date">'  + dateStr + '<br><span style="opacity:0.6;font-size:0.75em">' + timeStr + '</span></td>',
+        '</tr>',
+      ].join('');
+    }).join('');
+
+  } catch (e) {
+    document.getElementById('rsvp-body').innerHTML =
+      '<tr class="empty-row"><td colspan="6">Could not load RSVPs. Please refresh.</td></tr>';
+  }
+}
+
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+loadData();
+</script>
+</body>
+</html>

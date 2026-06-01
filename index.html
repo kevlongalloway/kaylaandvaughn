@@ -9,16 +9,16 @@
 <meta property="og:type"        content="website">
 <meta property="og:title"       content="You're Invited!">
 <meta property="og:description" content="Join us as we celebrate the wedding of Kayla &amp; Vaughn — January 16, 2027 in Flowery Branch, Georgia.">
-<meta property="og:image"       content="https://kaylaandvaughn.onrender.com/IMG_0981.png">
+<meta property="og:image"       content="https://kaylaandvaughn.cyou/IMG_0981.png">
 <meta property="og:image:width"  content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url"         content="https://kaylaandvaughn.onrender.com">
+<meta property="og:url"         content="https://kaylaandvaughn.cyou">
 
 <!-- Twitter / iMessage fallback -->
 <meta name="twitter:card"        content="summary_large_image">
 <meta name="twitter:title"       content="You're Invited!">
 <meta name="twitter:description" content="Join us as we celebrate the wedding of Kayla &amp; Vaughn — January 16, 2027 in Flowery Branch, Georgia.">
-<meta name="twitter:image"       content="https://kaylaandvaughn.onrender.com/IMG_0981.png">
+<meta name="twitter:image"       content="https://kaylaandvaughn.cyou/IMG_0981.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Lora:ital,wght@0,300;0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
 <style>
@@ -562,16 +562,13 @@ footer { background:var(--deep); color:var(--ivory); padding:80px 60px 40px; tex
       <div class="reveal">
         <form class="rsvp-form">
           <div class="form-row">
-            <div class="fg"><label>First Name *</label><input placeholder="Jane" required></div>
-            <div class="fg"><label>Last Name *</label><input placeholder="Smith" required></div>
+            <div class="fg"><label>First Name *</label><input name="firstName" placeholder="Jane" required></div>
+            <div class="fg"><label>Last Name *</label><input name="lastName" placeholder="Smith" required></div>
           </div>
-          <div class="fg"><label>Email Address</label><input type="email" placeholder="jane@example.com"></div>
-          <div class="fg">
-            <label>Meal Preference</label>
-            <select><option value="">— Select —</option><option>Chicken</option><option>Fish</option><option>Vegetarian</option></select>
-          </div>
-          <div class="fg"><label>Song Request &#127925;</label><input placeholder="What gets you on the dance floor?"></div>
-          <button type="button" class="btn-rsvp">Send RSVP</button>
+          <div class="fg"><label>Email Address</label><input name="email" type="email" placeholder="jane@example.com"></div>
+          <div class="fg"><label>Song Request &#127925;</label><input name="songRequest" placeholder="What gets you on the dance floor?"></div>
+          <button type="button" class="btn-rsvp" id="rsvp-btn">Send RSVP</button>
+          <p id="rsvp-msg" style="display:none;font-size:0.85rem;margin-top:4px;line-height:1.7"></p>
         </form>
       </div>
       <div class="reveal">
@@ -681,6 +678,57 @@ var obs = new IntersectionObserver(function(entries) {
   });
 }, { threshold: 0.08 });
 document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
+</script>
+
+<script>
+// ── RSVP SUBMISSION ───────────────────────────────────────────────────────────
+(function() {
+  var btn = document.getElementById('rsvp-btn');
+  var msg = document.getElementById('rsvp-msg');
+  var form = btn.closest('form');
+
+  function showMsg(text, type) {
+    msg.textContent = text;
+    msg.style.color = type === 'success' ? 'var(--pist-dk)' : '#c0392b';
+    msg.style.display = 'block';
+  }
+
+  btn.addEventListener('click', async function() {
+    var firstName   = form.querySelector('[name="firstName"]').value.trim();
+    var lastName    = form.querySelector('[name="lastName"]').value.trim();
+    var email       = form.querySelector('[name="email"]').value.trim();
+    var songRequest = form.querySelector('[name="songRequest"]').value.trim();
+
+    if (!firstName || !lastName) {
+      showMsg('Please enter your first and last name.', 'error');
+      return;
+    }
+
+    btn.textContent = 'Sending\u2026';
+    btn.disabled = true;
+    msg.style.display = 'none';
+
+    try {
+      var res  = await fetch('/api/rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: firstName, lastName: lastName, email: email, songRequest: songRequest })
+      });
+      var data = await res.json();
+      if (res.ok) {
+        showMsg(data.message, 'success');
+        form.reset();
+      } else {
+        showMsg(data.error || 'Something went wrong. Please try again.', 'error');
+      }
+    } catch (e) {
+      showMsg('Could not reach the server. Please check your connection and try again.', 'error');
+    } finally {
+      btn.textContent = 'Send RSVP';
+      btn.disabled = false;
+    }
+  });
+})();
 </script>
 </body>
 </html>
